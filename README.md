@@ -18,6 +18,10 @@ The tutorial for this API is split into three main parts:
     - [Calling functions every time a request is made and using custom transaction contexts](./tutorials/extending_a_simple_contract.md#calling-functions-every-time-a-request-is-made-and-using-custom-transaction-contexts)
     - [Handling unknown function requests](./tutorials/extending_a_simple_contract.md#handling-unknown-function-requests)
     - [Interacting with your running chaincode](./tutorials/extending_a_simple_contract.md#interacting-with-your-running-chaincode)
-- [Incorporating multiple contracts](./tutorials/incorporating_multiple_contracts.md)
+- [Incorporating multiple contracts and handling objects](./tutorials/incorporating_multiple_contracts_and_handling_objects.md)
+    - [Prerequisites](./tutorials/incorporating_multiple_contracts_and_handling_objects.md#prerequisites)
+    - [Building a contract to handle an asset](./tutorials/incorporating_multiple_contracts_and_handling_objects.md#building-a-contract-to-handle-an-asset)
+    - [Adding a second contract to the chaincode](./tutorials/incorporating_multiple_contracts_and_handling_objects.md#adding-a-second-contract-to-the-chaincode)
+    - [Interacting with your running chaincode](./tutorials/incorporating_multiple_contracts_and_handling_objects.md#interacting-with-your-running-chaincode)
 
 These follow on from each other so it is recommended you follow them in order.

@@ -349,5 +349,5 @@ peer chaincode query -n mycc -c '{"Args":["Read", "KEY_1"]}' -C myc
 The contract API also provides a system contract accessible via the running chaincode with the namespace `org.hyperledger.fabric`. This system contract currently provides a single function `GetMetadata` which provides details on the contracts running within the chaincode. Query this function to see details about your contract:
 
 ```
-peer chaincode query -n mycc -c '{"Args":["GetMetadata"]}' -C myc
+peer chaincode query -n mycc -c '{"Args":["org.hyperledger.fabric:GetMetadata"]}' -C myc
 ```
