@@ -47,8 +47,8 @@ func (sa *SimpleAsset) GetAfterTransaction() (interface{}, error) {
 	return nil, nil
 }
 
-// GetNamespace returns namespace
-func (sa *SimpleAsset) GetNamespace() string {
+// GetName returns name
+func (sa *SimpleAsset) GetName() string {
 	return "org.asset.simple"
 }
 

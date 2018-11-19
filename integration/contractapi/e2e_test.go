@@ -62,7 +62,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 		os.RemoveAll(testDir)
 	})
 
-	Describe("single namespace contractapi created chaincode", func() {
+	Describe("single contract contractapi created chaincode", func() {
 		BeforeEach(func() {
 			network = nwo.New(nwo.BasicSolo(), testDir, client, 30000, components)
 			network.GenerateConfigTree()
@@ -106,14 +106,14 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			RunSimpleBadInvoke(network, orderer, peer, []string{"Update", "ASSET_2", "Update"})
 
 			By("querying a function that does not exist")
-			RunSimpleBadQuery(network, orderer, peer, []string{"BadFunction", "ASSET_1"}, "Function BadFunction not found for contract with no namespace")
+			RunSimpleBadQuery(network, orderer, peer, []string{"BadFunction", "ASSET_1"}, "Function BadFunction not found for contract with no name")
 
-			By("querying a namespace that does not exist")
-			RunSimpleBadQuery(network, orderer, peer, []string{"badnamespace:Read", "ASSET_1"}, "Namespace not found badnamespace")
+			By("querying a name that does not exist")
+			RunSimpleBadQuery(network, orderer, peer, []string{"badname:Read", "ASSET_1"}, "Name not found badname")
 		})
 	})
 
-	Describe("single namespace contractapi created chaincode using extended functions", func() {
+	Describe("single name contractapi created chaincode using extended functions", func() {
 		BeforeEach(func() {
 			network = nwo.New(nwo.BasicSolo(), testDir, client, 30000, components)
 			network.GenerateConfigTree()
@@ -179,7 +179,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 		})
 	})
 
-	Describe("multiple namespace contractapi created chaincode", func() {
+	Describe("multiple name contractapi created chaincode", func() {
 		BeforeEach(func() {
 			network = nwo.New(nwo.BasicSolo(), testDir, client, 30000, components)
 			network.GenerateConfigTree()
@@ -247,7 +247,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			RunSimpleBadInvoke(network, orderer, peer, []string{"complexasset:UpdateOwner", "SIMPLE_ASSET_1", "Andy"})
 		})
 
-		It("can handle custom unknown functions for multiple namespaces", func() {
+		It("can handle custom unknown functions for multiple contracts", func() {
 			chaincode = nwo.Chaincode{
 				Name:    "mycc",
 				Version: "0.0",
@@ -264,13 +264,13 @@ var _ = Describe("contractapi - EndToEnd", func() {
 
 			peer := network.Peer("Org1", "peer1")
 
-			By("querying instantited chaincode simpleasset namespace with unknown function")
+			By("querying instantited chaincode simpleasset name with unknown function")
 			RunSimpleBadQuery(network, orderer, peer, []string{"simpleasset:BadFunction", "SIMPLE_ASSET_1"}, "Unknown function name simpleasset:BadFunction passed to simple asset with args [SIMPLE_ASSET_1]")
 
-			By("querying instantited chaincode complexasset namespace with unknown function")
+			By("querying instantited chaincode complexasset name with unknown function")
 			RunSimpleBadQuery(network, orderer, peer, []string{"complexasset:BadFunction", "COMPLEX_ASSET_1"}, "Unknown function name complexasset:BadFunction passed to complex asset with args [COMPLEX_ASSET_1]")
 
-			By("querying a function from another namespace")
+			By("querying a function from another name")
 			RunSimpleBadQuery(network, orderer, peer, []string{"complexasset:Update", "SIMPLE_ASSET_1"}, "Unknown function name complexasset:Update passed to complex asset with args [SIMPLE_ASSET_1]")
 		})
 	})

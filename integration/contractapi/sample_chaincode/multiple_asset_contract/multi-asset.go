@@ -255,13 +255,13 @@ func main() {
 	sac.SetTransactionContextHandler(new(TransactionContext))
 	sac.SetBeforeTransaction(getAsset)
 	sac.SetUnknownTransaction(handleSimpleUnknown)
-	sac.SetNamespace("simpleasset")
+	sac.SetName("simpleasset")
 
 	cac := new(ComplexAsset)
 	cac.SetTransactionContextHandler(new(TransactionContext))
 	cac.SetBeforeTransaction(getAsset)
 	cac.SetUnknownTransaction(handleComplexUnknown)
-	cac.SetNamespace("complexasset")
+	cac.SetName("complexasset")
 
 	if err := contractapi.CreateNewChaincode(sac, cac); err != nil {
 		fmt.Printf("Error starting multi asset chaincode: %s", err)

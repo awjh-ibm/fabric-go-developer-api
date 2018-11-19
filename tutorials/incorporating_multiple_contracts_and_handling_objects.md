@@ -184,7 +184,7 @@ func main() {
 }
 ```
 
-Because you now have two contracts there needs to be a way to differentiate between the contracts so that when a user passes a function the contract API knows in which contract it should look up that function. This is done by setting namespaces. The default namespace for a contract is "" hence why in the previous tutorials you only had to pass the function name to calls. At least one contract must be given a none default namespace so that they do not clash, in this tutorial we will set a namespace for each. The contract API gets the namespace using the `GetNamespace` function of `contractapi.ContractInterface`. As the contracts created in this tutorial embed the `contractapi.Contract` class we can set the value for that function to return by calling `SetNamespace`. Like with the setting of the before transaction and others this call needs to be made before the creation of the chaincode.
+Because you now have two contracts there needs to be a way to differentiate between the contracts so that when a user passes a function the contract API knows in which contract it should look up that function. This is done by setting names. The default name for a contract is "" hence why in the previous tutorials you only had to pass the function name to calls. At least one contract must be given a none default name so that they do not clash, in this tutorial we will set a name for each. The contract API gets the name using the `GetName` function of `contractapi.ContractInterface`. As the contracts created in this tutorial embed the `contractapi.Contract` class we can set the value for that function to return by calling `SetName`. Like with the setting of the before transaction and others this call needs to be made before the creation of the chaincode.
 
 ```
 func main() {
@@ -192,10 +192,10 @@ func main() {
 	simpleContract.SetTransactionContextHandler(new(utils.CustomTransactionContext))
 	simpleContract.SetBeforeTransaction(utils.GetWorldState)
 	simpleContract.SetUnknownTransaction(utils.UnknownTransactionHandler)
-	simpleContract.SetNamespace("contracts.Simple")
+	simpleContract.SetName("contracts.Simple")
 
 	complexContract := new(contracts.Complex)
-	complexContract.SetNamespace("contracts.Complex")
+	complexContract.SetName("contracts.Complex")
 
 	if err := contractapi.CreateNewChaincode(simpleContract, complexContract); err != nil {
 		fmt.Printf("Error starting multiple contract chaincode: %s", err)
@@ -211,12 +211,12 @@ func main() {
 	simpleContract.SetTransactionContextHandler(new(utils.CustomTransactionContext))
 	simpleContract.SetBeforeTransaction(utils.GetWorldState)
 	simpleContract.SetUnknownTransaction(utils.UnknownTransactionHandler)
-	simpleContract.SetNamespace("contracts.Simple")
+	simpleContract.SetName("contracts.Simple")
 
 	complexContract := new(contracts.Complex)
 	complexContract.SetTransactionContextHandler(new(utils.CustomTransactionContext))
 	complexContract.SetBeforeTransaction(utils.GetWorldState)
-	complexContract.SetNamespace("contracts.Complex")
+	complexContract.SetName("contracts.Complex")
 
 	if err := contractapi.CreateNewChaincode(simpleContract, complexContract); err != nil {
 		fmt.Printf("Error starting multiple contract chaincode: %s", err)
@@ -243,7 +243,7 @@ Next instantiate the chaincode. You can only call instantiate once on a chaincod
 peer chaincode instantiate -n mycc -v 0 -c '{"Args":[]}' -C myc
 ```
 
-Now that the chaincode is instantiated you can invoke and query contracts within the chaincode, since you have set a namespace for both contracts each function call must be prefixed with the namespace in the format NAMESPACE:FUNCTION. Run the following commands to use your simple contract:
+Now that the chaincode is instantiated you can invoke and query contracts within the chaincode, since you have set a name for both contracts each function call must be prefixed with the name in the format NAME:FUNCTION. Run the following commands to use your simple contract:
 
 ```
 peer chaincode invoke -n mycc -c '{"Args":["contracts.Simple:Create", "KEY_1", "VALUE_1"]}' -C myc
