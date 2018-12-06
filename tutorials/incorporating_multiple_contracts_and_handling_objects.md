@@ -2,6 +2,7 @@
 - [Prerequisites](#prerequisites)
 - [Building a contract to handle an asset](#building-a-contract-to-handle-an-asset)
 - [Adding a second contract to the chaincode](#adding-a-second-contract-to-the-chaincode)
+- [Using a custom name for your contracts](#using-a-custom-name-for-your-contracts)
 - [Interacting with your running chaincode](#interacting-with-your-running-chaincode)
 
 The previous two tutorials built up a simple contract using the contract API to be executed using chaincode. This tutorial will cover building a more complex contract and adding both the simple and complex contracts to a single chaincode.
@@ -184,25 +185,6 @@ func main() {
 }
 ```
 
-Because you now have two contracts there needs to be a way to differentiate between the contracts so that when a user passes a function the contract API knows in which contract it should look up that function. This is done by setting names. The default name for a contract is "" hence why in the previous tutorials you only had to pass the function name to calls. At least one contract must be given a none default name so that they do not clash, in this tutorial we will set a name for each. The contract API gets the name using the `GetName` function of `contractapi.ContractInterface`. As the contracts created in this tutorial embed the `contractapi.Contract` class we can set the value for that function to return by calling `SetName`. Like with the setting of the before transaction and others this call needs to be made before the creation of the chaincode.
-
-```
-func main() {
-	simpleContract := new(contracts.Simple)
-	simpleContract.SetTransactionContextHandler(new(utils.CustomTransactionContext))
-	simpleContract.SetBeforeTransaction(utils.GetWorldState)
-	simpleContract.SetUnknownTransaction(utils.UnknownTransactionHandler)
-	simpleContract.SetName("contracts.Simple")
-
-	complexContract := new(contracts.Complex)
-	complexContract.SetName("contracts.Complex")
-
-	if err := contractapi.CreateNewChaincode(simpleContract, complexContract); err != nil {
-		fmt.Printf("Error starting multiple contract chaincode: %s", err)
-	}
-}
-```
-
 Earlier in this tutorial you coded the Complex contract to make use of `utils.CustomTransactionContext` and rely on `utils.GetWorldState` being called before each function. Update the main function to tell the contract API to use these.
 
 ```
@@ -211,18 +193,41 @@ func main() {
 	simpleContract.SetTransactionContextHandler(new(utils.CustomTransactionContext))
 	simpleContract.SetBeforeTransaction(utils.GetWorldState)
 	simpleContract.SetUnknownTransaction(utils.UnknownTransactionHandler)
-	simpleContract.SetName("contracts.Simple")
 
 	complexContract := new(contracts.Complex)
 	complexContract.SetTransactionContextHandler(new(utils.CustomTransactionContext))
 	complexContract.SetBeforeTransaction(utils.GetWorldState)
-	complexContract.SetName("contracts.Complex")
 
 	if err := contractapi.CreateNewChaincode(simpleContract, complexContract); err != nil {
 		fmt.Printf("Error starting multiple contract chaincode: %s", err)
 	}
 }
 ```
+
+## Using a custom name for your contracts
+
+The contract API calls the function `GetName` of the contract to decide what name to give the contract in the chaincode. If the value returned is a blank string then the contract API uses the name of the struct. By default contractapi.Contract.GetName returns a blank string and therefore the contracts which embed contractapi.Contract, as those in this tutorial do, by default have the Struct name used for their name. To use a custom name it is therefore necessary to have the `GetName` function of the contract return a non blank string. This can be done for contracts embedding `contractapi.Contract` by calling `SetName` on the contract before the chaincode is created. Update your main function to use custom names:
+
+```
+func main() {
+	simpleContract := new(contracts.Simple)
+	simpleContract.SetTransactionContextHandler(new(utils.CustomTransactionContext))
+	simpleContract.SetBeforeTransaction(utils.GetWorldState)
+	simpleContract.SetUnknownTransaction(utils.UnknownTransactionHandler)
+	simpleContract.SetName("SimpleContract")
+
+	complexContract := new(contracts.Complex)
+	complexContract.SetTransactionContextHandler(new(utils.CustomTransactionContext))
+	complexContract.SetBeforeTransaction(utils.GetWorldState)
+	complexContract.SetName("ComplexContract")
+
+	if err := contractapi.CreateNewChaincode(simpleContract, complexContract); err != nil {
+		fmt.Printf("Error starting multiple contract chaincode: %s", err)
+	}
+}
+```
+
+The simple and complex contracts are now named `SimpleContract` and `ComplexContract` respectively. 
 
 ## Interacting with your running chaincode
 The chaincode can be run in the same way as the simple contract. These instructions can be viewed [here](./a_simple_contract.md#running-your-chaincode-as-a-developer). Once you have your chaincode running you can interact with both contracts using the docker cli container. Enter this in a new terminal window:
@@ -246,23 +251,23 @@ peer chaincode instantiate -n mycc -v 0 -c '{"Args":[]}' -C myc
 Now that the chaincode is instantiated you can invoke and query contracts within the chaincode, since you have set a name for both contracts each function call must be prefixed with the name in the format NAME:FUNCTION. Run the following commands to use your simple contract:
 
 ```
-peer chaincode invoke -n mycc -c '{"Args":["contracts.Simple:Create", "KEY_1", "VALUE_1"]}' -C myc
+peer chaincode invoke -n mycc -c '{"Args":["SimpleContract:Create", "KEY_1", "VALUE_1"]}' -C myc
 
-peer chaincode invoke -n mycc -c '{"Args":["contracts.Simple:Update", "KEY_1", "VALUE_2"]}' -C myc
+peer chaincode invoke -n mycc -c '{"Args":["SimpleContract:Update", "KEY_1", "VALUE_2"]}' -C myc
 
-peer chaincode query -n mycc -c '{"Args":["contracts.Simple:Read", "KEY_1"]}' -C myc
+peer chaincode query -n mycc -c '{"Args":["SimpleContract:Read", "KEY_1"]}' -C myc
 ```
 
 You can interact with your complex contract using these commands:
 
 ```
-peer chaincode invoke -n mycc -c '{"Args":["contracts.Complex:NewAsset", "ASSET_1", "OWNER_1", "100"]}' -C myc
+peer chaincode invoke -n mycc -c '{"Args":["ComplexContract:NewAsset", "ASSET_1", "OWNER_1", "100"]}' -C myc
 
-peer chaincode invoke -n mycc -c '{"Args":["contracts.Complex:UpdateOwner", "ASSET_1", "OWNER_2"]}' -C myc
+peer chaincode invoke -n mycc -c '{"Args":["ComplexContract:UpdateOwner", "ASSET_1", "OWNER_2"]}' -C myc
 
-peer chaincode invoke -n mycc -c '{"Args":["contracts.Complex:UpdateValue", "ASSET_1", "100"]}' -C myc
+peer chaincode invoke -n mycc -c '{"Args":["ComplexContract:UpdateValue", "ASSET_1", "100"]}' -C myc
 
-peer chaincode query -n mycc -c '{"Args":["contracts.Complex:GetAsset", "ASSET_1"]}' -C myc
+peer chaincode query -n mycc -c '{"Args":["ComplexContract:GetAsset", "ASSET_1"]}' -C myc
 ```
 
 Note that in the complex contract it is specified that the value to be passed in as a value in both NewAsset and UpdateValue is an int yet in the commands they are strings. Fabric expects all arguments to be strings and therefore the data must be passed as a string through the above commands. The contract API then turns that data to the expected type for the functions (assumes base 10 for numeric types). The contract API will return an error response to the peer if this conversion fails.

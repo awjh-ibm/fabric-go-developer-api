@@ -78,7 +78,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 				Name:    "mycc",
 				Version: "0.0",
 				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/simple_asset_contract",
-				Ctor:    `{"Args":["Create","ASSET_1"]}`,
+				Ctor:    `{"Args":["SimpleAsset:Create","ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
 
@@ -91,25 +91,25 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			peer := network.Peer("Org1", "peer1")
 
 			By("querying instantiated simple asset chaincode")
-			RunSimpleQuery(network, orderer, peer, []string{"Read", "ASSET_1"}, "Initialised")
+			RunSimpleQuery(network, orderer, peer, []string{"SimpleAsset:Read", "ASSET_1"}, "Initialised")
 
 			By("invoking simple asset chaincode")
-			RunSimpleInvoke(network, orderer, peer, []string{"Update", "ASSET_1", "Updated"})
+			RunSimpleInvoke(network, orderer, peer, []string{"SimpleAsset:Update", "ASSET_1", "Updated"})
 
 			By("querying invoked simple asset chaincode")
-			RunSimpleQuery(network, orderer, peer, []string{"Read", "ASSET_1"}, "Updated")
+			RunSimpleQuery(network, orderer, peer, []string{"SimpleAsset:Read", "ASSET_1"}, "Updated")
 
 			By("querying a function that returns an error")
-			RunSimpleBadQuery(network, orderer, peer, []string{"Read", "ASSET_2"}, "Cannot read asset. Asset with id ASSET_2 does not exist")
+			RunSimpleBadQuery(network, orderer, peer, []string{"SimpleAsset:Read", "ASSET_2"}, "Cannot read asset. Asset with id ASSET_2 does not exist")
 
 			By("invoking a function that returns an error")
-			RunSimpleBadInvoke(network, orderer, peer, []string{"Update", "ASSET_2", "Update"})
+			RunSimpleBadInvoke(network, orderer, peer, []string{"SimpleAsset:Update", "ASSET_2", "Update"})
 
 			By("querying a function that does not exist")
-			RunSimpleBadQuery(network, orderer, peer, []string{"BadFunction", "ASSET_1"}, "Function BadFunction not found for contract with no name")
+			RunSimpleBadQuery(network, orderer, peer, []string{"SimpleAsset:BadFunction", "ASSET_1"}, "Function BadFunction not found in contract SimpleAsset")
 
 			By("querying a name that does not exist")
-			RunSimpleBadQuery(network, orderer, peer, []string{"badname:Read", "ASSET_1"}, "Name not found badname")
+			RunSimpleBadQuery(network, orderer, peer, []string{"badname:Read", "ASSET_1"}, "Contract not found with name badname")
 		})
 	})
 
@@ -129,7 +129,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 				Name:    "mycc",
 				Version: "0.0",
 				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/simple_asset_contract_extended",
-				Ctor:    `{"Args":["Create","ASSET_1"]}`,
+				Ctor:    `{"Args":["SimpleAsset:Create","ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
 
@@ -142,19 +142,19 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			peer := network.Peer("Org1", "peer1")
 
 			By("querying instantiated simple asset extended chaincode")
-			RunSimpleQuery(network, orderer, peer, []string{"Read", "ASSET_1"}, "Initialised")
+			RunSimpleQuery(network, orderer, peer, []string{"SimpleAsset:Read", "ASSET_1"}, "Initialised")
 
 			By("invoking simple asset extended chaincode")
-			RunSimpleInvoke(network, orderer, peer, []string{"Update", "ASSET_1", "Updated"})
+			RunSimpleInvoke(network, orderer, peer, []string{"SimpleAsset:Update", "ASSET_1", "Updated"})
 
 			By("querying initialised simple asset extended chaincode")
-			RunSimpleQuery(network, orderer, peer, []string{"Read", "ASSET_1"}, "Updated")
+			RunSimpleQuery(network, orderer, peer, []string{"SimpleAsset:Read", "ASSET_1"}, "Updated")
 
 			By("querying a function that returns an error")
-			RunSimpleBadQuery(network, orderer, peer, []string{"Read", "ASSET_2"}, "Cannot read asset. Asset with id ASSET_2 does not exist")
+			RunSimpleBadQuery(network, orderer, peer, []string{"SimpleAsset:Read", "ASSET_2"}, "Cannot read asset. Asset with id ASSET_2 does not exist")
 
 			By("invoking a function that returns an error")
-			RunSimpleBadInvoke(network, orderer, peer, []string{"Update", "ASSET_2", "Update"})
+			RunSimpleBadInvoke(network, orderer, peer, []string{"SimpleAsset:Update", "ASSET_2", "Update"})
 		})
 
 		It("can be deployed and uses custom unknown function handler when bad function name passed", func() {
@@ -162,7 +162,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 				Name:    "mycc",
 				Version: "0.0",
 				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/simple_asset_contract_extended",
-				Ctor:    `{"Args":["Create","ASSET_1"]}`,
+				Ctor:    `{"Args":["SimpleAsset:Create","ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
 
@@ -175,7 +175,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			peer := network.Peer("Org1", "peer1")
 
 			By("querying instantiated simple asset extended chaincode with unknown function")
-			RunSimpleBadQuery(network, orderer, peer, []string{"BadFunction", "ASSET_1"}, "Unknown function name BadFunction passed with args [ASSET_1]")
+			RunSimpleBadQuery(network, orderer, peer, []string{"SimpleAsset:BadFunction", "ASSET_1"}, "Unknown function name SimpleAsset:BadFunction passed with args [ASSET_1]")
 		})
 	})
 
@@ -357,7 +357,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 				Name:    "mycc",
 				Version: "0.0",
 				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/transaction_context_interface_chaincode",
-				Ctor:    `{"Args":["Create","SIMPLE_ASSET_1"]}`,
+				Ctor:    `{"Args":["SimpleAsset:Create","SIMPLE_ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
 
@@ -370,19 +370,19 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			peer := network.Peer("Org1", "peer1")
 
 			By("querying simple asset in the chaincode")
-			RunSimpleQuery(network, orderer, peer, []string{"Read", "SIMPLE_ASSET_1"}, "Initialised")
+			RunSimpleQuery(network, orderer, peer, []string{"SimpleAsset:Read", "SIMPLE_ASSET_1"}, "Initialised")
 
 			By("invoking simple asset in the chaincode")
-			RunSimpleInvoke(network, orderer, peer, []string{"Update", "SIMPLE_ASSET_1", "Updated"})
+			RunSimpleInvoke(network, orderer, peer, []string{"SimpleAsset:Update", "SIMPLE_ASSET_1", "Updated"})
 
-			By("querying initialised simple asset extended chaincode")
-			RunSimpleQuery(network, orderer, peer, []string{"Read", "SIMPLE_ASSET_1"}, "Updated")
+			By("querying initialised simple asset transaction context chaincode")
+			RunSimpleQuery(network, orderer, peer, []string{"SimpleAsset:Read", "SIMPLE_ASSET_1"}, "Updated")
 
 			By("querying a function that returns an error")
-			RunSimpleBadQuery(network, orderer, peer, []string{"Read", "SIMPLE_ASSET_2"}, "Cannot read asset. Asset with id SIMPLE_ASSET_2 does not exist")
+			RunSimpleBadQuery(network, orderer, peer, []string{"SimpleAsset:Read", "SIMPLE_ASSET_2"}, "Cannot read asset. Asset with id SIMPLE_ASSET_2 does not exist")
 
 			By("invoking a function that returns an error")
-			RunSimpleBadInvoke(network, orderer, peer, []string{"Update", "SIMPLE_ASSET_2", "Update"})
+			RunSimpleBadInvoke(network, orderer, peer, []string{"SimpleAsset:Update", "SIMPLE_ASSET_2", "Update"})
 		})
 
 		It("can be deployed and uses custom unknown function handler when bad function name passed", func() {
@@ -390,7 +390,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 				Name:    "mycc",
 				Version: "0.0",
 				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/transaction_context_interface_chaincode",
-				Ctor:    `{"Args":["Create","SIMPLE_ASSET_1"]}`,
+				Ctor:    `{"Args":["SimpleAsset:Create","SIMPLE_ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
 
@@ -403,7 +403,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			peer := network.Peer("Org1", "peer1")
 
 			By("querying instantiated simple asset extended chaincode with unknown function")
-			RunSimpleBadQuery(network, orderer, peer, []string{"BadFunction", "SIMPLE_ASSET_1"}, "Unknown function name BadFunction passed with args [SIMPLE_ASSET_1]")
+			RunSimpleBadQuery(network, orderer, peer, []string{"SimpleAsset:BadFunction", "SIMPLE_ASSET_1"}, "Unknown function name SimpleAsset:BadFunction passed with args [SIMPLE_ASSET_1]")
 		})
 	})
 })
@@ -471,7 +471,7 @@ func RunSimpleBadInvoke(n *nwo.Network, orderer *nwo.Orderer, peer *nwo.Peer, ar
 	})
 	Expect(err).NotTo(HaveOccurred())
 	Eventually(sess, time.Minute).Should(gexec.Exit(1))
-	Expect(sess.Err).To(gbytes.Say("Error: endorsement failure during invoke. chaincode result: status:500.*"))
+	Expect(sess.Err).To(gbytes.Say("Error: endorsement failure during invoke. response: status:500.*"))
 }
 
 func sliceToCLIArgs(args []string) string {
