@@ -93,6 +93,9 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			By("querying instantiated simple asset chaincode")
 			RunSimpleQuery(network, orderer, peer, []string{"SimpleAsset:Read", "ASSET_1"}, "Initialised")
 
+			By("querying instantiated simple asset chaincode using a blank name")
+			RunSimpleQuery(network, orderer, peer, []string{"Read", "ASSET_1"}, "Initialised")
+
 			By("invoking simple asset chaincode")
 			RunSimpleInvoke(network, orderer, peer, []string{"SimpleAsset:Update", "ASSET_1", "Updated"})
 
@@ -272,6 +275,9 @@ var _ = Describe("contractapi - EndToEnd", func() {
 
 			By("querying a function from another name")
 			RunSimpleBadQuery(network, orderer, peer, []string{"complexasset:Update", "SIMPLE_ASSET_1"}, "Unknown function name complexasset:Update passed to complex asset with args [SIMPLE_ASSET_1]")
+
+			By("querying using the default namespace for the non default contract")
+			RunSimpleBadQuery(network, orderer, peer, []string{"ReadColours", "COMPLEX_ASSET_1"}, "Unknown function name ReadColours passed to simple asset with args [COMPLEX_ASSET_1]")
 		})
 	})
 
