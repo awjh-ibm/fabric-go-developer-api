@@ -16,7 +16,9 @@ package e2e
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"syscall"
@@ -77,7 +79,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			chaincode = nwo.Chaincode{
 				Name:    "mycc",
 				Version: "0.0",
-				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/simple_asset_contract",
+				Path:    "github.com/awjh-ibm/fabric-go-developer-api/integration/contractapi/sample_chaincode/simple_asset_contract",
 				Ctor:    `{"Args":["SimpleAsset:Create","ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
@@ -131,7 +133,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			chaincode = nwo.Chaincode{
 				Name:    "mycc",
 				Version: "0.0",
-				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/simple_asset_contract_extended",
+				Path:    "github.com/awjh-ibm/fabric-go-developer-api/integration/contractapi/sample_chaincode/simple_asset_contract_extended",
 				Ctor:    `{"Args":["SimpleAsset:Create","ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
@@ -164,7 +166,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			chaincode = nwo.Chaincode{
 				Name:    "mycc",
 				Version: "0.0",
-				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/simple_asset_contract_extended",
+				Path:    "github.com/awjh-ibm/fabric-go-developer-api/integration/contractapi/sample_chaincode/simple_asset_contract_extended",
 				Ctor:    `{"Args":["SimpleAsset:Create","ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
@@ -197,7 +199,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			chaincode = nwo.Chaincode{
 				Name:    "mycc",
 				Version: "0.0",
-				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/multiple_asset_contract",
+				Path:    "github.com/awjh-ibm/fabric-go-developer-api/integration/contractapi/sample_chaincode/multiple_asset_contract",
 				Ctor:    `{"Args":["simpleasset:Create","SIMPLE_ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
@@ -254,7 +256,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			chaincode = nwo.Chaincode{
 				Name:    "mycc",
 				Version: "0.0",
-				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/multiple_asset_contract",
+				Path:    "github.com/awjh-ibm/fabric-go-developer-api/integration/contractapi/sample_chaincode/multiple_asset_contract",
 				Ctor:    `{"Args":["simpleasset:Create","SIMPLE_ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
@@ -296,7 +298,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			chaincode = nwo.Chaincode{
 				Name:    "mycc",
 				Version: "0.0",
-				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/contract_interface_chaincode",
+				Path:    "github.com/awjh-ibm/fabric-go-developer-api/integration/contractapi/sample_chaincode/contract_interface_chaincode",
 				Ctor:    `{"Args":["org.asset.simple:Create","SIMPLE_ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
@@ -329,7 +331,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			chaincode = nwo.Chaincode{
 				Name:    "mycc",
 				Version: "0.0",
-				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/contract_interface_chaincode",
+				Path:    "github.com/awjh-ibm/fabric-go-developer-api/integration/contractapi/sample_chaincode/contract_interface_chaincode",
 				Ctor:    `{"Args":["org.asset.simple:Create","SIMPLE_ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
@@ -362,7 +364,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			chaincode = nwo.Chaincode{
 				Name:    "mycc",
 				Version: "0.0",
-				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/transaction_context_interface_chaincode",
+				Path:    "github.com/awjh-ibm/fabric-go-developer-api/integration/contractapi/sample_chaincode/transaction_context_interface_chaincode",
 				Ctor:    `{"Args":["SimpleAsset:Create","SIMPLE_ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
@@ -395,7 +397,7 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			chaincode = nwo.Chaincode{
 				Name:    "mycc",
 				Version: "0.0",
-				Path:    "github.com/hyperledger/fabric/integration/contractapi/sample_chaincode/transaction_context_interface_chaincode",
+				Path:    "github.com/awjh-ibm/fabric-go-developer-api/integration/contractapi/sample_chaincode/transaction_context_interface_chaincode",
 				Ctor:    `{"Args":["SimpleAsset:Create","SIMPLE_ASSET_1"]}`,
 				Policy:  `AND ('Org1MSP.member','Org2MSP.member')`,
 			}
@@ -412,6 +414,57 @@ var _ = Describe("contractapi - EndToEnd", func() {
 			RunSimpleBadQuery(network, orderer, peer, []string{"SimpleAsset:BadFunction", "SIMPLE_ASSET_1"}, "Unknown function name SimpleAsset:BadFunction passed with args [SIMPLE_ASSET_1]")
 		})
 	})
+
+	// COMMENTED OUT UNTIL FABRIC SUPPORTS META-INF/chaincode FOLDER
+	// Describe("custom metadata contract contractapi created chaincode", func() {
+	// 	BeforeEach(func() {
+	// 		network = nwo.New(nwo.BasicSolo(), testDir, client, 30000, components)
+	// 		network.GenerateConfigTree()
+	// 		network.Bootstrap()
+
+	// 		networkRunner := network.NetworkGroupRunner()
+	// 		process = ifrit.Invoke(networkRunner)
+	// 		Eventually(process.Ready()).Should(BeClosed())
+	// 	})
+
+	// 	It("can be deployed, invoked and queried with expected results", func() {
+	// 		chaincode = nwo.Chaincode{
+	// 			Name:    "mycc",
+	// 			Version: "0.0",
+	// 			Path:    "github.com/awjh-ibm/fabric-go-developer-api/integration/contractapi/sample_chaincode/custom_metadata_chaincode", Ctor: `{"Args":[]}`,
+	// 			Policy: `AND ('Org1MSP.member','Org2MSP.member')`,
+	// 		}
+	// 		orderer := network.Orderer("orderer")
+	// 		network.CreateAndJoinChannel(orderer, "testchannel")
+
+	// 		By("deploying the chaincode")
+	// 		nwo.DeployChaincode(network, "testchannel", orderer, chaincode)
+
+	// 		peer := network.Peer("Org1", "peer1")
+
+	// 		By("querying the chaincode metadata")
+	// 		file, _ := ioutil.ReadFile("./sample_chaincode/custom_metadata_chaincode/META-INFO/chaincode/metadata.json")
+	// 		RunSimpleQuery(network, orderer, peer, []string{"org.hyperledger.fabric:GetMetadata"}, string(file))
+
+	// 		By("invoking custom metadata chaincode")
+	// 		RunSimpleInvoke(network, orderer, peer, []string{"Create", "ASSET_1"})
+
+	// 		By("querying invoked custom metadata chaincode")
+	// 		RunSimpleQuery(network, orderer, peer, []string{"Read", "ASSET_1"}, "0")
+
+	// 		By("invoking custom metadata chaincode with valid value against schema")
+	// 		RunSimpleInvoke(network, orderer, peer, []string{"Update", "ASSET_1", "100"})
+
+	// 		By("querying invoked custom metadata chaincode after update")
+	// 		RunSimpleQuery(network, orderer, peer, []string{"Read", "ASSET_1"}, "100")
+
+	// 		By("invoking custom metadata chaincode with invalid value against schema")
+	// 		RunSimpleBadInvoke(network, orderer, peer, []string{"Update", "ASSET_1", "95"})
+
+	// 		By("querying invoked custom metadata chaincode after update")
+	// 		RunSimpleQuery(network, orderer, peer, []string{"Read", "ASSET_1"}, "100")
+	// 	})
+	// })
 })
 
 func RunSimpleQuery(n *nwo.Network, orderer *nwo.Orderer, peer *nwo.Peer, args []string, expectedResult string) {
@@ -486,4 +539,10 @@ func sliceToCLIArgs(args []string) string {
 	}
 
 	return strings.Join(args, ",")
+}
+
+func CopyDir(src, dst string) error {
+	cmd := exec.Command("cp", "a")
+	log.Printf("Running cp -a")
+	return cmd.Run()
 }
