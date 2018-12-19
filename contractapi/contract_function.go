@@ -18,6 +18,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/validate"
 )
 
 type contractFunctionParams struct {
@@ -36,8 +39,8 @@ type contractFunction struct {
 	returns  contractFunctionReturns
 }
 
-func (cf contractFunction) call(ctx reflect.Value, params ...string) (string, error) {
-	values, err := getArgs(cf, ctx, params)
+func (cf contractFunction) call(ctx reflect.Value, supplementaryMetadata TransactionMetadata, params ...string) (string, error) {
+	values, err := getArgs(cf, ctx, supplementaryMetadata, params)
 
 	if err != nil {
 		return "", err
@@ -258,7 +261,13 @@ func createArrayOrSlice(param string, objType reflect.Type) (reflect.Value, erro
 	return obj.Elem(), nil
 }
 
-func getArgs(fn contractFunction, ctx reflect.Value, params []string) ([]reflect.Value, error) {
+func getArgs(fn contractFunction, ctx reflect.Value, supplementaryMetadata TransactionMetadata, params []string) ([]reflect.Value, error) {
+	var shouldValidate bool
+
+	if !reflect.DeepEqual(supplementaryMetadata, TransactionMetadata{}) {
+		shouldValidate = true
+	}
+
 	values := []reflect.Value{}
 
 	numParams := len(fn.params.fields)
@@ -277,27 +286,36 @@ func getArgs(fn contractFunction, ctx reflect.Value, params []string) ([]reflect
 
 		fieldType := fn.params.fields[i]
 
+		var converted reflect.Value
+		var err error
 		if fieldType.Kind() == reflect.Array || fieldType.Kind() == reflect.Slice {
 			if !inParamRange {
 				params[i] = "[]"
 			}
 
-			slice, err := createArrayOrSlice(params[i], fieldType)
+			converted, err = createArrayOrSlice(params[i], fieldType)
 
 			if err != nil {
 				return nil, err
 			}
 
-			values = append(values, slice)
 		} else {
-			converted, err := basicTypes[fieldType.Kind()].convert(params[i])
+			converted, err = basicTypes[fieldType.Kind()].convert(params[i])
 
 			if err != nil {
 				return nil, fmt.Errorf("Param %s could not be converted to type %s", params[i], fieldType.String())
 			}
-
-			values = append(values, converted)
 		}
+
+		if shouldValidate {
+			err := validate.AgainstSchema(&supplementaryMetadata.Parameters[i].Schema, converted.Interface(), strfmt.Default)
+
+			if err != nil {
+				return nil, fmt.Errorf("Value passed for parameter \"%s\" did not match schema: %s", supplementaryMetadata.Parameters[i].Name, err)
+			}
+		}
+
+		values = append(values, converted)
 	}
 
 	return values, nil

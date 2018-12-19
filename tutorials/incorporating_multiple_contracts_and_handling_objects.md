@@ -248,7 +248,7 @@ Next instantiate the chaincode. You can only call instantiate once on a chaincod
 peer chaincode instantiate -n mycc -v 0 -c '{"Args":[]}' -C myc
 ```
 
-Now that the chaincode is instantiated you can invoke and query contracts within the chaincode, since you have set a name for both contracts each function call must be prefixed with the name in the format NAME:FUNCTION. Run the following commands to use your simple contract:
+Now that the chaincode is instantiated you can invoke and query contracts within the chaincode, since you have set a name for both contracts each function call must be prefixed with the name in the format SET_NAME:FUNCTION. The exception to this is that as the simple contract was passed first when creating chaincode, its functions can be called without passing the name. Run the following commands to use your simple contract:
 
 ```
 peer chaincode invoke -n mycc -c '{"Args":["SimpleContract:Create", "KEY_1", "VALUE_1"]}' -C myc

@@ -102,7 +102,9 @@ func main() {
 	sac.SetBeforeTransaction(getAsset)
 	sac.SetUnknownTransaction(handleUnknown)
 
-	if err := contractapi.CreateNewChaincode(sac); err != nil {
+	cc := contractapi.CreateNewChaincode(sac)
+
+	if err := cc.Start(); err != nil {
 		fmt.Printf("Error starting SimpleAsset chaincode: %s", err)
 	}
 }

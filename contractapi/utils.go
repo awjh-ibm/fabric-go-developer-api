@@ -17,11 +17,28 @@ package contractapi
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path"
 	"reflect"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/go-openapi/spec"
 )
+
+type ioHlp interface {
+	ReadFile(string) ([]byte, error)
+}
+
+type ioHlpStr struct{}
+
+func (io ioHlpStr) ReadFile(filename string) ([]byte, error) {
+	return ioutil.ReadFile(filename)
+}
+
+var ioutilHelper ioHlp = ioHlpStr{}
 
 func stringInSlice(a string, list []string) bool {
 	for _, b := range list {
@@ -68,10 +85,20 @@ func embedsStruct(sc interface{}, toEmbed string) bool {
 	return false
 }
 
+func readLocalFile(localPath string) ([]byte, error) {
+	_, filename, _, _ := runtime.Caller(1)
+
+	schemaPath := path.Join(path.Dir(filename), localPath)
+
+	file, err := ioutilHelper.ReadFile(schemaPath)
+
+	return file, err
+}
+
 // Types
 type basicType interface {
 	convert(string) (reflect.Value, error)
-	getSchema() *Schema
+	getSchema() *spec.Schema
 }
 
 type stringType struct{}
@@ -80,10 +107,8 @@ func (st *stringType) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(value), nil
 }
 
-func (st *stringType) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"string"}
-	return schema
+func (st *stringType) getSchema() *spec.Schema {
+	return spec.StringProperty()
 }
 
 type boolType struct{}
@@ -102,10 +127,8 @@ func (bt *boolType) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(boolVal), nil
 }
 
-func (bt *boolType) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"boolean"}
-	return schema
+func (bt *boolType) getSchema() *spec.Schema {
+	return spec.BooleanProperty()
 }
 
 type intType struct{}
@@ -124,11 +147,8 @@ func (it *intType) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(intVal), nil
 }
 
-func (it *intType) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"integer"}
-	schema.Format = "int64"
-	return schema
+func (it *intType) getSchema() *spec.Schema {
+	return spec.Int64Property()
 }
 
 type int8Type struct{}
@@ -148,13 +168,8 @@ func (it *int8Type) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(intVal), nil
 }
 
-func (it *int8Type) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"integer"}
-	schema.Format = "int32"
-	schema.Minimum = -128
-	schema.Maximum = 127
-	return schema
+func (it *int8Type) getSchema() *spec.Schema {
+	return spec.Int8Property()
 }
 
 type int16Type struct{}
@@ -174,13 +189,8 @@ func (it *int16Type) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(intVal), nil
 }
 
-func (it *int16Type) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"integer"}
-	schema.Format = "int32"
-	schema.Minimum = -32768
-	schema.Maximum = 32767
-	return schema
+func (it *int16Type) getSchema() *spec.Schema {
+	return spec.Int16Property()
 }
 
 type int32Type struct{}
@@ -200,11 +210,8 @@ func (it *int32Type) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(intVal), nil
 }
 
-func (it *int32Type) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"integer"}
-	schema.Format = "int32"
-	return schema
+func (it *int32Type) getSchema() *spec.Schema {
+	return spec.Int32Property()
 }
 
 type int64Type struct{}
@@ -223,11 +230,8 @@ func (it *int64Type) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(intVal), nil
 }
 
-func (it *int64Type) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"integer"}
-	schema.Format = "int64"
-	return schema
+func (it *int64Type) getSchema() *spec.Schema {
+	return spec.Int64Property()
 }
 
 type uintType struct{}
@@ -247,12 +251,14 @@ func (ut *uintType) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(uintVal), nil
 }
 
-func (ut *uintType) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"number"}
-	schema.Format = "float64"
-	schema.Minimum = 0
-	schema.Maximum = 18446744073709551615
+func (ut *uintType) getSchema() *spec.Schema {
+	schema := spec.Float64Property()
+	multOf := float64(1)
+	schema.MultipleOf = &multOf
+	minimum := float64(0)
+	schema.Minimum = &minimum
+	maximum := float64(18446744073709551615)
+	schema.Maximum = &maximum
 	return schema
 }
 
@@ -273,12 +279,12 @@ func (ut *uint8Type) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(uintVal), nil
 }
 
-func (ut *uint8Type) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"integer"}
-	schema.Format = "int32"
-	schema.Minimum = 0
-	schema.Maximum = 255
+func (ut *uint8Type) getSchema() *spec.Schema {
+	schema := spec.Int32Property()
+	minimum := float64(0)
+	schema.Minimum = &minimum
+	maximum := float64(255)
+	schema.Maximum = &maximum
 	return schema
 }
 
@@ -299,12 +305,12 @@ func (ut *uint16Type) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(uintVal), nil
 }
 
-func (ut *uint16Type) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"integer"}
-	schema.Format = "int64"
-	schema.Minimum = 0
-	schema.Maximum = 65535
+func (ut *uint16Type) getSchema() *spec.Schema {
+	schema := spec.Int64Property()
+	minimum := float64(0)
+	schema.Minimum = &minimum
+	maximum := float64(65535)
+	schema.Maximum = &maximum
 	return schema
 }
 
@@ -325,12 +331,12 @@ func (ut *uint32Type) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(uintVal), nil
 }
 
-func (ut *uint32Type) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"integer"}
-	schema.Format = "int64"
-	schema.Minimum = 0
-	schema.Maximum = 4294967295
+func (ut *uint32Type) getSchema() *spec.Schema {
+	schema := spec.Int64Property()
+	minimum := float64(0)
+	schema.Minimum = &minimum
+	maximum := float64(4294967295)
+	schema.Maximum = &maximum
 	return schema
 }
 
@@ -350,12 +356,14 @@ func (ut *uint64Type) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(uintVal), nil
 }
 
-func (ut *uint64Type) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"number"}
-	schema.Format = "float64"
-	schema.Minimum = 0
-	schema.Maximum = 18446744073709551615
+func (ut *uint64Type) getSchema() *spec.Schema {
+	schema := spec.Float64Property()
+	multOf := float64(1)
+	schema.MultipleOf = &multOf
+	minimum := float64(0)
+	schema.Minimum = &minimum
+	maximum := float64(18446744073709551615)
+	schema.Maximum = &maximum
 	return schema
 }
 
@@ -376,11 +384,8 @@ func (ft *float32Type) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(floatVal), nil
 }
 
-func (ft *float32Type) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"number"}
-	schema.Format = "float32"
-	return schema
+func (ft *float32Type) getSchema() *spec.Schema {
+	return spec.Float32Property()
 }
 
 type float64Type struct{}
@@ -399,11 +404,8 @@ func (ft *float64Type) convert(value string) (reflect.Value, error) {
 	return reflect.ValueOf(floatVal), nil
 }
 
-func (ft *float64Type) getSchema() *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"number"}
-	schema.Format = "float64"
-	return schema
+func (ft *float64Type) getSchema() *spec.Schema {
+	return spec.Float64Property()
 }
 
 var basicTypes = map[reflect.Kind]basicType{
@@ -434,16 +436,7 @@ func listBasicTypes() string {
 	return sliceAsCommaSentence(types)
 }
 
-func newArraySchema(lowerSchema *Schema) *Schema {
-	schema := new(Schema)
-	schema.Type = []string{"array"}
-	schema.Items = new(SchemaOrArray)
-	schema.Items.Schema = lowerSchema
-
-	return schema
-}
-
-func buildArraySchema(array reflect.Value) (*Schema, error) {
+func buildArraySchema(array reflect.Value) (*spec.Schema, error) {
 	if array.Len() < 1 {
 		return nil, fmt.Errorf("Arrays must have length greater than 0")
 	}
@@ -451,7 +444,7 @@ func buildArraySchema(array reflect.Value) (*Schema, error) {
 	return buildArrayOrSliceSchema(array)
 }
 
-func buildSliceSchema(slice reflect.Value) (*Schema, error) {
+func buildSliceSchema(slice reflect.Value) (*spec.Schema, error) {
 	if slice.Len() < 1 {
 		slice = reflect.MakeSlice(slice.Type(), 1, 10)
 	}
@@ -459,8 +452,8 @@ func buildSliceSchema(slice reflect.Value) (*Schema, error) {
 	return buildArrayOrSliceSchema(slice)
 }
 
-func buildArrayOrSliceSchema(obj reflect.Value) (*Schema, error) {
-	var lowerSchema *Schema
+func buildArrayOrSliceSchema(obj reflect.Value) (*spec.Schema, error) {
+	var lowerSchema *spec.Schema
 	var err error
 
 	if obj.Index(0).Kind() == reflect.Array {
@@ -481,12 +474,10 @@ func buildArrayOrSliceSchema(obj reflect.Value) (*Schema, error) {
 		lowerSchema = basicTypes[obj.Index(0).Kind()].getSchema()
 	}
 
-	schema := newArraySchema(lowerSchema)
-
-	return schema, nil
+	return spec.ArrayProperty(lowerSchema), nil
 }
 
-func getSchema(field reflect.Type) (*Schema, error) {
+func getSchema(field reflect.Type) (*spec.Schema, error) {
 	if bt, ok := basicTypes[field.Kind()]; !ok {
 		if field.Kind() == reflect.Array {
 			return buildArraySchema(reflect.New(field).Elem())

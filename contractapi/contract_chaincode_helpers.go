@@ -15,12 +15,13 @@
 package contractapi
 
 import (
+	"encoding/json"
 	"reflect"
 )
 
 var contractStringType = reflect.TypeOf(Contract{}).String()
 
-func convertC2CC(contracts ...ContractInterface) *ContractChaincode {
+func convertC2CC(contracts ...ContractInterface) ContractChaincode {
 	ciT := reflect.TypeOf((*ContractInterface)(nil)).Elem()
 	var ciMethods []string
 	for i := 0; i < ciT.NumMethod(); i++ {
@@ -36,7 +37,7 @@ func convertC2CC(contracts ...ContractInterface) *ContractChaincode {
 		}
 	}
 
-	cc := new(ContractChaincode)
+	cc := ContractChaincode{}
 	cc.contracts = make(map[string]contractChaincodeContract)
 
 	for _, contract := range contracts {
@@ -58,7 +59,11 @@ func convertC2CC(contracts ...ContractInterface) *ContractChaincode {
 		sccnStore = append(sccnStore, cc.contracts[k])
 	}
 
-	sysC.setMetadata(generateMetadata(*cc))
+	cc.augmentMetadata()
+
+	metadataJSON, _ := json.Marshal(cc.metadata)
+
+	sysC.setMetadata(string(metadataJSON))
 
 	return cc
 }

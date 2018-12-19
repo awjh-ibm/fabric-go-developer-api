@@ -17,13 +17,17 @@ package contractapi
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
+
+	"github.com/go-openapi/spec"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/protos/peer"
 )
 
 type contractChaincodeContract struct {
+	version                      string
 	functions                    map[string]*contractFunction
 	unknownTransaction           *contractFunction
 	beforeTransaction            *contractFunction
@@ -34,7 +38,11 @@ type contractChaincodeContract struct {
 
 // ContractChaincode a struct to meet the chaincode interface and provide routing of calls to contracts
 type ContractChaincode struct {
-	contracts map[string]contractChaincodeContract
+	defaultContract string
+	contracts       map[string]contractChaincodeContract
+	metadata        ContractChaincodeMetadata
+	title           string
+	version         string
 }
 
 // SystemContractName the name of the system smart contract
@@ -43,15 +51,40 @@ const SystemContractName = "org.hyperledger.fabric"
 // CreateNewChaincode creates a new chaincode using contracts passed. The function parses each
 // of the passed functions and stores details about their make-up to be used by the chaincode.
 // Public functions of the contracts are stored an are made callable in the chaincode. The function
-// will panic if contracts are invalid e.g. public functions take in illegal types. If no panic occurs
-// the a new chaincode handling the contracts is started in the shim. A system contract is added to the
-// chaincode which provides functionality for getting the metadata of the chaincode. The generated
+// will panic if contracts are invalid e.g. public functions take in illegal types. A system contract is added
+// to the chaincode which provides functionality for getting the metadata of the chaincode. The generated
 // metadata is a JSON formatted MetadataContractChaincode containing each contract as a name and details
-// of the public functions. The names for parameters do not match those used in the functions instead they are
-// recorded as param0, param1, ..., paramN. If there exists a file contract-metadata/metadata.json then this
+// of the public functions. It also outlines version details for contracts and the chaincode. If these are blank
+// strings this is set to latest. The names for parameters do not match those used in the functions instead they are
+// recorded as param0, param1, ..., paramN. If there exists a file META-INF/chaincode/metadata.json then this
 // will overwrite the generated metadata. The contents of this file must validate against the schema.
-func CreateNewChaincode(contracts ...ContractInterface) error {
-	return shim.Start(convertC2CC(contracts...))
+func CreateNewChaincode(contracts ...ContractInterface) ContractChaincode {
+	return convertC2CC(contracts...)
+}
+
+// Start starts the chaincode in the fabric shim
+func (cc *ContractChaincode) Start() error {
+	return shim.Start(cc)
+}
+
+// GetTitle returns the set title
+func (cc *ContractChaincode) GetTitle() string {
+	return cc.title
+}
+
+// SetTitle sets the title
+func (cc *ContractChaincode) SetTitle(title string) {
+	cc.title = title
+}
+
+// GetVersion returns the set version
+func (cc *ContractChaincode) GetVersion() string {
+	return cc.version
+}
+
+// SetVersion sets the version
+func (cc *ContractChaincode) SetVersion(version string) {
+	cc.version = version
 }
 
 // Init is called during Instantiate transaction after the chaincode container
@@ -80,9 +113,9 @@ func (cc *ContractChaincode) Init(stub shim.ChaincodeStubInterface) peer.Respons
 // name is passed but the function name is unknown then the contract with that name's
 // unknown function is called and its value returned as success or error depending on it return. If no
 // unknown function is defined for the contract then shim.Error is returned by Invoke. In the case of
-// unknown function names being passed or the named function returning an error then the after function
+// unknown function names being passed (and the unknown handler returns an error) or the named function returning an error then the after function
 // if defined is not called. The same transaction context is passed as a pointer to before, after, named
-// and unknown functions on each Invoke.
+// and unknown functions on each Invoke. If no contract name is passed then the default contract is used.
 func (cc *ContractChaincode) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 	nsFcn, params := stub.GetFunctionAndParameters()
 
@@ -92,11 +125,12 @@ func (cc *ContractChaincode) Invoke(stub shim.ChaincodeStubInterface) peer.Respo
 	var fn string
 
 	if li == -1 {
-		return shim.Error("Name was not passed")
+		ns = cc.defaultContract
+		fn = nsFcn
+	} else {
+		ns = nsFcn[:li]
+		fn = nsFcn[li+1:]
 	}
-
-	ns = nsFcn[:li]
-	fn = nsFcn[li+1:]
 
 	if _, ok := cc.contracts[ns]; !ok {
 		return shim.Error(fmt.Sprintf("Contract not found with name %s", ns))
@@ -111,7 +145,7 @@ func (cc *ContractChaincode) Invoke(stub shim.ChaincodeStubInterface) peer.Respo
 	beforeTransaction := nsContract.beforeTransaction
 
 	if beforeTransaction != nil {
-		_, errRes := beforeTransaction.call(ctx, params...)
+		_, errRes := beforeTransaction.call(ctx, TransactionMetadata{}, params...)
 
 		if errRes != nil {
 			return shim.Error(errRes.Error())
@@ -127,9 +161,18 @@ func (cc *ContractChaincode) Invoke(stub shim.ChaincodeStubInterface) peer.Respo
 			return shim.Error(fmt.Sprintf("Function %s not found in contract %s", fn, ns))
 		}
 
-		successReturn, errorReturn = unknownTransaction.call(ctx, params...)
+		successReturn, errorReturn = unknownTransaction.call(ctx, TransactionMetadata{}, params...)
 	} else {
-		successReturn, errorReturn = nsContract.functions[fn].call(ctx, params...)
+		var transactionSchema TransactionMetadata
+
+		for _, v := range cc.metadata.Contracts[ns].Transactions {
+			if v.Name == fn {
+				transactionSchema = v
+				break
+			}
+		}
+
+		successReturn, errorReturn = nsContract.functions[fn].call(ctx, transactionSchema, params...)
 	}
 
 	if errorReturn != nil {
@@ -139,7 +182,7 @@ func (cc *ContractChaincode) Invoke(stub shim.ChaincodeStubInterface) peer.Respo
 	afterTransaction := nsContract.afterTransaction
 
 	if afterTransaction != nil {
-		_, errRes := afterTransaction.call(ctx, params...)
+		_, errRes := afterTransaction.call(ctx, TransactionMetadata{}, params...)
 
 		if errRes != nil {
 			return shim.Error(errRes.Error())
@@ -164,6 +207,11 @@ func (cc *ContractChaincode) addContract(contract ContractInterface, excludeFunc
 	ccn.transactionContextHandler = reflect.ValueOf(contract.GetTransactionContextHandler()).Elem().Type()
 	ccn.transactionContextPtrHandler = reflect.ValueOf(contract.GetTransactionContextHandler()).Type()
 	ccn.functions = make(map[string]*contractFunction)
+	ccn.version = contract.GetVersion()
+
+	if ccn.version == "" {
+		ccn.version = "latest"
+	}
 
 	scT := reflect.PtrTo(reflect.TypeOf(contract).Elem())
 	scV := reflect.ValueOf(contract).Elem().Addr()
@@ -196,4 +244,95 @@ func (cc *ContractChaincode) addContract(contract ContractInterface, excludeFunc
 	}
 
 	cc.contracts[ns] = ccn
+
+	if cc.defaultContract == "" {
+		cc.defaultContract = ns
+	}
+}
+
+func (cc *ContractChaincode) reflectMetadata() ContractChaincodeMetadata {
+	reflectedMetadata := ContractChaincodeMetadata{}
+	reflectedMetadata.Contracts = make(map[string]ContractMetadata)
+	reflectedMetadata.Info.Version = cc.GetVersion()
+	reflectedMetadata.Info.Title = cc.GetTitle()
+
+	if reflectedMetadata.Info.Version == "" {
+		reflectedMetadata.Info.Version = "latest"
+	}
+
+	if reflectedMetadata.Info.Title == "" {
+		reflectedMetadata.Info.Title = "undefined"
+	}
+
+	for key, contract := range cc.contracts {
+		contractMetadata := ContractMetadata{}
+		contractMetadata.Name = key
+		contractMetadata.Info.Version = contract.version
+		contractMetadata.Info.Title = key
+
+		for key, fn := range contract.functions {
+			transactionMetadata := TransactionMetadata{}
+			transactionMetadata.Name = key
+
+			for index, field := range fn.params.fields {
+				schema, err := getSchema(field)
+
+				if err != nil {
+					panic(fmt.Sprintf("Failed to generate metadata. Invalid function parameter type. %s", err))
+				}
+
+				param := ParameterMetadata{}
+				param.Name = fmt.Sprintf("param%d", index)
+				param.Required = true
+				param.Schema = *schema
+
+				transactionMetadata.Parameters = append(transactionMetadata.Parameters, param)
+			}
+
+			if fn.returns.success != nil {
+				schema, err := getSchema(fn.returns.success)
+
+				if err != nil {
+					panic(fmt.Sprintf("Failed to generate metadata. Invalid function success return type. %s", err))
+				}
+
+				param := ParameterMetadata{}
+				param.Name = "success"
+				param.Schema = *schema
+
+				transactionMetadata.Returns = append(transactionMetadata.Returns, param)
+			}
+
+			if fn.returns.error {
+				schema := spec.Schema{}
+				schema.Type = []string{"object"}
+				schema.Format = "error"
+
+				param := ParameterMetadata{}
+				param.Name = "error"
+				param.Schema = schema
+
+				transactionMetadata.Returns = append(transactionMetadata.Returns, param)
+			}
+
+			contractMetadata.Transactions = append(contractMetadata.Transactions, transactionMetadata)
+		}
+
+		sort.Slice(contractMetadata.Transactions, func(i, j int) bool {
+			return contractMetadata.Transactions[i].Name < contractMetadata.Transactions[j].Name
+		})
+
+		reflectedMetadata.Contracts[key] = contractMetadata
+	}
+
+	return reflectedMetadata
+}
+
+func (cc *ContractChaincode) augmentMetadata() {
+	fileMetadata := readMetadataFile()
+	reflectedMetadata := cc.reflectMetadata()
+
+	fileMetadata.append(reflectedMetadata)
+
+	cc.metadata = fileMetadata
 }

@@ -263,7 +263,9 @@ func main() {
 	cac.SetUnknownTransaction(handleComplexUnknown)
 	cac.SetName("complexasset")
 
-	if err := contractapi.CreateNewChaincode(sac, cac); err != nil {
+	cc := contractapi.CreateNewChaincode(sac, cac)
+
+	if err := cc.Start(); err != nil {
 		fmt.Printf("Error starting multi asset chaincode: %s", err)
 	}
 }

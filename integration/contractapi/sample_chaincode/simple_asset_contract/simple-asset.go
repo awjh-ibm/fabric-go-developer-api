@@ -86,7 +86,9 @@ func (sa *SimpleAsset) Read(ctx *contractapi.TransactionContext, assetID string)
 func main() {
 	sac := new(SimpleAsset)
 
-	if err := contractapi.CreateNewChaincode(sac); err != nil {
+	cc := contractapi.CreateNewChaincode(sac)
+
+	if err := cc.Start(); err != nil {
 		fmt.Printf("Error starting SimpleAsset chaincode: %s", err)
 	}
 }
