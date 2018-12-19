@@ -31,6 +31,11 @@ type TransactionContext struct {
 type SimpleAsset struct {
 }
 
+// GetVersion returns the current running version
+func (sa *SimpleAsset) GetVersion() string {
+	return "1.0.0"
+}
+
 // GetUnknownTransaction returns the current set unknownTransaction
 // and errors if not set
 func (sa *SimpleAsset) GetUnknownTransaction() (interface{}, error) {
@@ -124,7 +129,9 @@ func handleUnknown(ctx *TransactionContext) error {
 func main() {
 	sac := new(SimpleAsset)
 
-	if err := contractapi.CreateNewChaincode(sac); err != nil {
+	cc := contractapi.CreateNewChaincode(sac)
+
+	if err := cc.Start(); err != nil {
 		fmt.Printf("Error starting SimpleAsset chaincode: %s", err)
 	}
 }

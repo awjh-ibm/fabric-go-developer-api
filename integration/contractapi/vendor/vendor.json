@@ -38,33 +38,6 @@
 			"revisionTime": "2018-11-22T21:40:40Z"
 		},
 		{
-			"checksumSHA1": "nJrp/CKnvpO+vzTfOeR8qmzRZ4c=",
-			"origin": "github.com/awjh-ibm/fabric-go-developer-api/contractapi/vendor/github.com/PuerkitoBio/purell",
-			"path": "github.com/PuerkitoBio/purell",
-			"revision": "a26ba0f79a15b9e0e8afbd908e571150cc269fe8",
-			"revisionTime": "2018-12-11T14:56:42Z"
-		},
-		{
-			"checksumSHA1": "/jQPcsccvsC9GVM9pV6fESxWOUk=",
-			"origin": "github.com/awjh-ibm/fabric-go-developer-api/contractapi/vendor/github.com/PuerkitoBio/urlesc",
-			"path": "github.com/PuerkitoBio/urlesc",
-			"revision": "a26ba0f79a15b9e0e8afbd908e571150cc269fe8",
-			"revisionTime": "2018-12-11T14:56:42Z"
-		},
-		{
-			"checksumSHA1": "5gnBrB9ISzgkQe5rLOlFp2MqA/8=",
-			"origin": "github.com/awjh-ibm/fabric-go-developer-api/contractapi/vendor/github.com/asaskevich/govalidator",
-			"path": "github.com/asaskevich/govalidator",
-			"revision": "a26ba0f79a15b9e0e8afbd908e571150cc269fe8",
-			"revisionTime": "2018-12-11T14:56:42Z"
-		},
-		{
-			"checksumSHA1": "+sFBFkszMJ2WNtlhkPOuiUNi/vk=",
-			"path": "github.com/awjh-ibm/fabric-go-developer-api/contractapi",
-			"revision": "a26ba0f79a15b9e0e8afbd908e571150cc269fe8",
-			"revisionTime": "2018-12-11T14:56:42Z"
-		},
-		{
 			"checksumSHA1": "6aGvzibOCGGTbCFKOHRWIASC+Us=",
 			"origin": "github.com/docker/docker/vendor/github.com/containerd/continuity/pathdriver",
 			"path": "github.com/containerd/continuity/pathdriver",
@@ -754,6 +727,24 @@
 			"path": "github.com/tedsuo/ifrit/grouper",
 			"revision": "9924915ab0c3b5236d74139ed49ab37a11ab9f3f",
 			"revisionTime": "2018-11-22T21:40:40Z"
+		},
+		{
+			"checksumSHA1": "+SLRfCdnZzt59tTsNUp6ie39zjo=",
+			"path": "github.com/xeipuuv/gojsonpointer",
+			"revision": "4e3ac2762d5f479393488629ee9370b50873b3a6",
+			"revisionTime": "2018-01-27T04:07:02Z"
+		},
+		{
+			"checksumSHA1": "cjCjdAbLpKV1bxMpMRzC5Fn4R34=",
+			"path": "github.com/xeipuuv/gojsonreference",
+			"revision": "bd5ef7bd5415a7ac448318e64f11a24cd21e594b",
+			"revisionTime": "2018-01-27T04:06:03Z"
+		},
+		{
+			"checksumSHA1": "WBHZbgSWyCjBlAfw6mB8OiZWTBg=",
+			"path": "github.com/xeipuuv/gojsonschema",
+			"revision": "ac52e6811b56ee2b7730a88915e956afe2cc0d69",
+			"revisionTime": "2018-11-02T20:36:17Z"
 		},
 		{
 			"checksumSHA1": "4JeqOqxJwpFPYXjYy6PCfUb+Flg=",
