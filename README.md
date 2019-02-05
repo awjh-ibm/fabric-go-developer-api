@@ -1,3 +1,5 @@
+> WARNING: This is a prototype. This project is not intended for production use (yet). The documentation and tutorials may not match with the code. There is no branching all new code goes into master.
+
 # Fabric developer API
 This project provides the contract interface, a high level API for application developers to implement business logic for Hyperledger Fabric.
 
