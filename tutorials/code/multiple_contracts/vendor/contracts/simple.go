@@ -62,7 +62,7 @@ func (s *Simple) Update(ctx *utils.CustomTransactionContext, key string, value s
 }
 
 // Read returns the value at key in the world state
-func (s *Simple) Read(ctx *utils.CustomTransactionContext, key string, value string) (string, error) {
+func (s *Simple) Read(ctx *utils.CustomTransactionContext, key string) (string, error) {
 	existing := ctx.CallData
 
 	if existing == nil {

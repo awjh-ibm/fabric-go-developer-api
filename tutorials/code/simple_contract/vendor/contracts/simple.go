@@ -69,7 +69,7 @@ func (s *Simple) Update(ctx *contractapi.TransactionContext, key string, value s
 }
 
 // Read returns the value at key in the world state
-func (s *Simple) Read(ctx *contractapi.TransactionContext, key string, value string) (string, error) {
+func (s *Simple) Read(ctx *contractapi.TransactionContext, key string) (string, error) {
 	existing, err := ctx.GetStub().GetState(key)
 
 	if err != nil {

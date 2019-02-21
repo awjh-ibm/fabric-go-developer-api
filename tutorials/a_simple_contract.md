@@ -1,5 +1,6 @@
 # A simple contract
 
+## Tutorial contents
 - [Prerequisites](#prerequisites)
 - [Housekeeping](#housekeeping)
 - [Declaring a contract](#declaring-a-contract)
@@ -29,9 +30,9 @@ You will need to configure the docker containers used by fabric-samples/chaincod
 The folder chaincode within fabric-samples is already configured to be copied across to the docker container. Create a new folder within here called `go-developer-api-tutorial`. This is where you will write your tutorial chaincode.
 
 ## Declaring a contract
-The contractapi generates chaincode by taking one or more "contracts" that it bundles into a running chaincode. The first thing we will do here is declare a contract for use in our chaincode. This contract will be simple, handling the reading and writing of strings to and from the world state. All contracts for use in chaincode must implement the contractapi.ContractInterface. The easiest way to do this is embed the contractapi.Contract struct within your own contract which will provide default functionality for meeting this interface. 
+The contractapi generates chaincode by taking one or more "contracts" that it bundles into a running chaincode. The first thing we will do here is declare a contract for use in our chaincode. This contract will be simple, handling the reading and writing of strings to and from the world state. All contracts for use in chaincode must implement the contractapi.ContractInterface. The easiest way to do this is to embed the contractapi.Contract struct within your own contract which will provide default functionality for meeting this interface. 
 
-Begin your contract by creating a folder `vendor` within `go-developer-api-tutorial` and adding a further folder `contracts` within the `vendor` folder. Create a file in `go-developer-api-tutorial/vendor/contracts` called `simple.go`. Within this file create a struct called Simple which embeds the contractapi.Contract struct:
+Begin your contract by creating a folder `vendor` within `go-developer-api-tutorial` and adding a further folder `contracts` within the `vendor` folder. Create a file in `go-developer-api-tutorial/vendor/contracts` called `simple.go`. Within this file create a struct called Simple which embeds the contractapi.Contract struct. This will be your "Simple" contract.
 
 ```
 package contracts
@@ -62,31 +63,36 @@ The following are permissible types that may be taken in:
     - uint (including uint8, uint16, uint32 and uint64)
     - float32
     - float64
-- an array of length > 0 of any of the basic types
-- a slice of the basic types
-- multidimensional slice/array/combination of slice/array of basic types
+- structs whose public fields are all of allowable types (including further structs)
+- pointers to structs
+- arrays/slices of any allowable type (including multidimensional arrays)
+- maps with a key of string type and items of any allowable type (including further maps)
+- interface{}
 
 If the function takes in *contractapi.TransactionContext (or a custom transaction context implementing contractapi.TransactionContextInterface) then that argument must be specified first within the function declaration and there may be only zero or one arguments of this type. There may be any number of the other types.
 
-As values are passed as strings to fabric the contractapi will convert these to the correct go type. In cases of numeric types the conversion assumes base 10. If you wish to use another base take a string type and perform the conversion manually. Bool uses strconv.ParseBool. Arrays/Slices are assumed to be received in stringified JSON format. If conversion fails for any of the arguments passed an error is returned to the peer and the function is not called.
+As values are passed as strings to fabric the contractapi will convert these to the correct go type. In cases of numeric types the conversion assumes base 10. If you wish to use another base take a string type and perform the conversion manually. Bool uses strconv.ParseBool. Arrays, slices, structs, pointers to structs and maps are assumed to be received in stringified JSON format. If conversion fails for any of the arguments passed, an error is returned to the peer and the function is not called.
 
 Functions can be defined to return zero, one or two values. These can be of types:
-- string
-- bool
-- int (including int8, int16, int32 and int64)
-- uint (including uint8, uint16, uint32 and uint64)
-- float32
-- float64
-- an array of length > 0 of any of the above types
-- a slice of the above types
-- multidimensional slice/array/combination of slice/array of the above types
+- basic Go types:
+    - string
+    - bool
+    - int (including int8, int16, int32 and int64)
+    - uint (including uint8, uint16, uint32 and uint64)
+    - float32
+    - float64
+- structs whose public fields are all of allowable types (including further structs)
+- pointers to structs
+- arrays/slices of any allowable type (including multidimensional arrays)
+- maps with a key of string type and items of any allowable type (including further maps)
+- interface{}
 - error
 
 At most one non-error type and one error can be returned. By go convention an error is expected as the last return type specified in the function declaration. The peer will receive the following responses (providing there are no errors elsewhere e.g. type conversion):
 - **No return type specified** - peer receives a *success* response with no message for every function call
-- **Single non error return type specified**  - returned value will be returned to the peer as a *success* with the returned value in the success message.
+- **Single non error return type specified**  - returned value will be returned to the peer as a *success* with the returned value in the success message as bytes (non basic types will be JSONified).
 - **Single error return type specified** - if the returned error value is nil then a *success* response is returned to the peer with no message. If the error value is not nil then an *error* response is returned to the peer with the returned error message.
-- **Two return types specified** - if the error return value is not nil then an *error* response is returned to the peer with the returned error message. If the error value is nil then a *success* response is sent to the peer with a stringified version of the returned value. For array/slice types a JSON format is used, for other non string types fmt.Sprintf is used to convert the value. 
+- **Two return types specified** - if the error return value is not nil then an *error* response is returned to the peer with the returned error message. If the error value is nil then a *success* response is sent to the peer as bytes (non basic types will be JSONified).
 
 The first function to write for your contract is `Create`. This will add a new key value pair to the world state using a key and value provided by the user. As it interacts with the world state it will also require the transaction context to be passed. As the default transaction context provided by contractapi provides all the necessary functions for interacting with the world state the function will take this. As the function is intended to write rather than return data it will only return the error type.
 
@@ -144,7 +150,7 @@ The third and final function to add to the simple contract is `Read` this will t
 
 ```
 // Read returns the value at key in the world state
-func (s *Simple) Read(ctx *contractapi.TransactionContext, key string, value string) (string, error) {
+func (s *Simple) Read(ctx *contractapi.TransactionContext, key string) (string, error) {
     existing, err := ctx.GetStub().GetState(key)
 
     if err != nil {
@@ -255,9 +261,15 @@ Within the main function create a new instance of the `Simple` struct from contr
 ```
     simpleContract := new(contract.Simple)
 
-    if err := contractapi.CreateNewChaincode(simpleContract); err != nil {
-        fmt.Printf("Error starting simple contract chaincode: %s", err)
-    }
+    cc := contractapi.CreateNewChaincode(simpleContract)
+```
+
+You must the start up the chaincode to make it callable. Add the following to the bottom of your main function:
+
+```
+    if err := cc.Start(); err != nil {
+		fmt.Printf("Error starting Simple chaincode: %s", err)
+	}
 ```
 
 Your main.go file should now look like this:
@@ -273,9 +285,11 @@ import (
 func main() {
     simpleContract := new(contracts.Simple)
 
-    if err := contractapi.CreateNewChaincode(simpleContract); err != nil {
-        fmt.Printf("Error starting simple contract chaincode: %s", err)
-    }
+    cc := contractapi.CreateNewChaincode(simpleContract)
+
+    if err := cc.Start(); err != nil {
+		fmt.Printf("Error starting Simple chaincode: %s", err)
+	}
 }
 ```
 
@@ -329,25 +343,31 @@ Passing no arguments to instantiate means that no function of your contract is c
 Now that the chaincode is instantiated you can interact with your chaincode using invoke and query. First use an invoke to create a new key pair in the world state:
 
 ```
-peer chaincode invoke -n mycc -c '{"Args":["contracts.Simple:Create", "KEY_1", "VALUE_1"]}' -C myc
+peer chaincode invoke -n mycc -c '{"Args":["Simple:Create", "KEY_1", "VALUE_1"]}' -C myc
 ```
 
-The first argument of invoke is the contract and function you wish to call separated by a colon. In this case the contract is "contracts.Simple" and function "Create". By default the first contract passed in for the created chaincode is the default and can be called without passing a name. It is therefore possible in this chaincode to call all functions by just passing the name. The remaining arguments are the values to be passed to the function so in the case of create the key and value parameters. Note that you do not pass the transaction context, this is generated by the running chaincode to be passed to your contract function.
+The first argument of invoke is the contract and function you wish to call separated by a colon. The first contract passed in for the created chaincode is the known as default and can be called without passing a name. It is therefore possible in this chaincode to call all functions in the simple contract by just passing the function name (no colon). The remaining arguments are the values to be passed to the function so in the case of `Create` the key and value parameters.
+
+> Note that you do not pass the transaction context, this is generated by the running chaincode to be passed to your contract function.
 
 Once your key value pair is created you can use the "Update" function of your contract to change the value. This again can be done using an invoke argument:
 
 ```
-peer chaincode invoke -n mycc -c '{"Args":["contracts.Simple:Update", "KEY_1", "VALUE_2"]}' -C myc
+peer chaincode invoke -n mycc -c '{"Args":["Simple:Update", "KEY_1", "VALUE_2"]}' -C myc
 ```
 
 If you wish to read the value stored for a particular key you can query the "Read" function of the contract:
 
 ```
-peer chaincode query -n mycc -c '{"Args":["contracts.Simple:Read", "KEY_1"]}' -C myc
+peer chaincode query -n mycc -c '{"Args":["Simple:Read", "KEY_1"]}' -C myc
 ```
+
+You should see VALUE_2 returned.
 
 The contract API also provides a system contract with the name `org.hyperledger.fabric` inside your chaincode. This system contract currently provides a single function `GetMetadata` which provides details on the contracts running within the chaincode. Query this function to see details about your contract:
 
 ```
 peer chaincode query -n mycc -c '{"Args":["org.hyperledger.fabric:GetMetadata"]}' -C myc
 ```
+
+This can be useful when you forget the name of a contract or structure of a function you wish to call. The name field of a contract is its identifier for calling e.g. Simple. Currently the parameters names are set to be `param0`, `param1`, ..., `paramN` rather than their actual names due to the limitations of go. More about this metadata will be covered in later tutorials.

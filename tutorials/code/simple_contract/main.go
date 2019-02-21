@@ -24,7 +24,9 @@ import (
 func main() {
 	simpleContract := new(contracts.Simple)
 
-	if err := contractapi.CreateNewChaincode(simpleContract); err != nil {
-		fmt.Printf("Error starting simple contract chaincode: %s", err)
+	cc := contractapi.CreateNewChaincode(simpleContract)
+
+	if err := cc.Start(); err != nil {
+		fmt.Printf("Error starting LettersOfCredit chaincode: %s", err)
 	}
 }

@@ -32,9 +32,12 @@ func main() {
 	complexContract := new(contracts.Complex)
 	complexContract.SetTransactionContextHandler(new(utils.CustomTransactionContext))
 	complexContract.SetBeforeTransaction(utils.GetWorldState)
+
 	complexContract.SetName("ComplexContract")
 
-	if err := contractapi.CreateNewChaincode(simpleContract, complexContract); err != nil {
+	cc := contractapi.CreateNewChaincode(simpleContract, complexContract)
+
+	if err := cc.Start(); err != nil {
 		fmt.Printf("Error starting multiple contract chaincode: %s", err)
 	}
 }
