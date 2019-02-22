@@ -28,7 +28,9 @@ func main() {
 	simpleContract.SetBeforeTransaction(utils.GetWorldState)
 	simpleContract.SetUnknownTransaction(utils.UnknownTransactionHandler)
 
-	if err := contractapi.CreateNewChaincode(simpleContract); err != nil {
-		fmt.Printf("Error starting simple contract chaincode: %s", err)
+	cc := contractapi.CreateNewChaincode(simpleContract)
+
+	if err := cc.Start(); err != nil {
+		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
 }
