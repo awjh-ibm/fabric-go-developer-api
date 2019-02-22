@@ -67,7 +67,7 @@ The following are permissible types that may be taken in:
 - pointers to structs
 - arrays/slices of any allowable type (including multidimensional arrays)
 - maps with a key of string type and items of any allowable type (including further maps)
-- interface{}
+- interface{} (will receive parameter as string argument passed)
 
 If the function takes in *contractapi.TransactionContext (or a custom transaction context implementing contractapi.TransactionContextInterface) then that argument must be specified first within the function declaration and there may be only zero or one arguments of this type. There may be any number of the other types.
 
