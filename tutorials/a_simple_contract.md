@@ -119,7 +119,7 @@ func (s *Simple) Create(ctx *contractapi.TransactionContext, key string, value s
 }
 ```
 
-The function uses the stub of the transaction context ([shim.ChaincodeStubInterface](https://godoc.org/github.com/hyperledger/fabric/core/chaincode/shim#ChaincodeStubInterface)) to first read from the world state, checking that no value exists with the supplied key and then puts a new value into the world state, converting the passed value to bytes as required.
+The function uses the stub of the transaction context ([shim.ChaincodeStubInterface](https://godoc.org/github.com/hyperledger/fabric-chaincode-go/shim#ChaincodeStubInterface)) to first read from the world state, checking that no value exists with the supplied key and then puts a new value into the world state, converting the passed value to bytes as required.
 
 The second function to add to the contract is `Update`, this will work in the same way as the `Create` function however instead of erroring if the key exists in the world state it will error if it does not.
 
@@ -259,7 +259,7 @@ func main() {
 Within the main function create a new instance of the `Simple` struct from contracts and then use this as an argument for creating a new chaincode:
 
 ```
-    simpleContract := new(contract.Simple)
+    simpleContract := new(contracts.Simple)
 
     cc := contractapi.CreateNewChaincode(simpleContract)
 ```
@@ -275,6 +275,8 @@ You must the start up the chaincode to make it callable. Add the following to th
 Your main.go file should now look like this:
 
 ```
+package main
+
 import (
     "fmt"
     "contracts"

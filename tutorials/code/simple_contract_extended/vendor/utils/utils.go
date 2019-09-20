@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/awjh-ibm/fabric-go-developer-api/contractapi"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
 // CustomTransactionContext adds extra field to contractapi.TransactionContext
@@ -49,12 +48,9 @@ func GetWorldState(ctx *CustomTransactionContext) error {
 	return nil
 }
 
-var logger = shim.NewLogger("go-developer-api-tutorial")
-
 // UnknownTransactionHandler logs details of a bad transaction request
 // and returns a shim error
 func UnknownTransactionHandler(ctx *CustomTransactionContext) error {
 	fcn, args := ctx.GetStub().GetFunctionAndParameters()
-	logger.Errorf("Invalid function %s passed with args %v", fcn, args)
-	return fmt.Errorf("Invalid function %s", fcn)
+	return fmt.Errorf("Invalid function %s passed with args %v", fcn, args)
 }

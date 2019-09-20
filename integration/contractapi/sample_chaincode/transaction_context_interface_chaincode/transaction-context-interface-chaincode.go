@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/awjh-ibm/fabric-go-developer-api/contractapi"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric-chaincode-go/shim"
 )
 
 // TransactionContext custom transaction context so can store values
