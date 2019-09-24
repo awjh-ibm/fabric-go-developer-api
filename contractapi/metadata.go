@@ -23,14 +23,11 @@ import (
 	"reflect"
 
 	"github.com/go-openapi/spec"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/xeipuuv/gojsonschema"
 )
 
 const metadataFolder = "META-INF"
 const metadataFile = "metadata.json"
-
-var logger = shim.NewLogger("contractapi/metadata.go")
 
 // Helper for OS testing
 type osHlp interface {
@@ -127,8 +124,8 @@ func readMetadataFile() ContractChaincodeMetadata {
 
 	ex, execErr := osHelper.Executable()
 	if execErr != nil {
-		logger.Error(fmt.Sprintf("Error finding location of running executable. Defaulting to Reflected metadata. %s", execErr.Error()))
-
+		// TODO: needs logging properly
+		fmt.Sprintf("Error finding location of running executable. Defaulting to Reflected metadata. %s", execErr.Error())
 		return fileMetadata
 	}
 	exPath := filepath.Dir(ex)
@@ -137,7 +134,8 @@ func readMetadataFile() ContractChaincodeMetadata {
 	_, err := osHelper.Stat(metadataPath)
 
 	if os.IsNotExist(err) {
-		logger.Info("No metadata file supplied")
+		// TODO: needs logging properly
+		fmt.Sprintf("No metadata file supplied")
 		return fileMetadata
 	}
 

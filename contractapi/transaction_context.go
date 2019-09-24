@@ -15,7 +15,7 @@
 package contractapi
 
 import (
-	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric-chaincode-go/shim"
 )
 
 // TransactionContextInterface defines functions a valid transaction context

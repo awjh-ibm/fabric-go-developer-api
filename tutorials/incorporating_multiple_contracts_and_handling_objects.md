@@ -172,7 +172,7 @@ func (c *Complex) GetAsset(ctx *utils.CustomTransactionContext, id string) (*def
 You may notice that each of the functions that reads from the world state checks that the data returned is that of a basic asset and therefore this could be parted out to a separate function. As that is outside the scope of the contract API it has been ignored by this tutorial.
 
 ## Adding a second contract to the chaincode
-Your main.go file will already contain the code to use the simple contract inside chaincode, here you now need to add code to use your complex contract inside the chaincode as well. This is done using the exact same method as the Simple contracy by creating a new instance of the `Complex` struct from contracts and pass this new instance as an argument to the `contractapi.CreateNewChaincode`.
+Your main.go file will already contain the code to use the simple contract inside chaincode, here you now need to add code to use your complex contract inside the chaincode as well. This is done using the exact same method as the Simple contract by creating a new instance of the `Complex` struct from contracts and pass this new instance as an argument to the `contractapi.CreateNewChaincode`.
 
 ```
 func main() {

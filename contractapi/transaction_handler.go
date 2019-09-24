@@ -74,7 +74,6 @@ func newTransactionHandler(fn interface{}, contextHandlerType reflect.Type, hand
 	cf := newContractFunctionFromFunc(fn, contextHandlerType)
 
 	if handlesType != after && len(cf.params.fields) > 0 {
-		logger.Error()
 		panic(fmt.Sprintf("%s transactions may not take any params other than the transaction context", handlesType.String()))
 	} else if handlesType == after && len(cf.params.fields) > 1 {
 		panic("After transactions must take at most one non-context param")

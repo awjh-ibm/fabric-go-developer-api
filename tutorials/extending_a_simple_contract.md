@@ -14,7 +14,7 @@ The tutorial ["A simple contract"](./a_simple_contract) covered the basics of us
 ## Calling functions every time a request is made and using custom transaction contexts
 The contract API provides functionality for specified functions to be called before and after each call to a contract. The simple contract made in the previous tutorial performs the same task at the start of each function call, getting data from the world state. It would therefore be useful to create one function to do this and set it up to run before each transaction. The transaction context is the same for all function calls during a transaction so data set in the transaction context by the before call can be used in the main and after calls. Likewise data set/updated by the main call can be used in the after call. Updates to the world state made by previous functions are not readable by later functions as all the calls are made within the same transaction and in fabric you [cannot read your own writes](https://hyperledger-fabric.readthedocs.io/en/master/readwrite.html).
 
-Before and after functions do not follow the same structure rules as contract functions. Before transactions cannot take any other parameter than the transaction context and after transactions can only take the transaction context and an interface type. This is as parameter data is not passed to the before and after transactions. The before transaction receives no additional call data and the after transaction receives the value returned by the named function in the call as its only parameter. Access to the raw arguments sent as part of the invoke/query can be gained through the [stub](https://godoc.org/github.com/hyperledger/fabric/core/chaincode/shim#ChaincodeStub).
+Before and after functions do not follow the same structure rules as contract functions. Before transactions cannot take any other parameter than the transaction context and after transactions can only take the transaction context and an interface type. This is as parameter data is not passed to the before and after transactions. The before transaction receives no additional call data and the after transaction receives the value returned by the named function in the call as its only parameter. Access to the raw arguments sent as part of the invoke/query can be gained through the [stub](https://godoc.org/github.com/hyperledger/fabric-chaincode-go/shim#ChaincodeStub).
 
 > Note: if the named function has no defined success response or it returns interface{} as its success response and has returned nil for that interface the after transaction will receive a nil value for its interface parameter of type `contractapi.UndefinedInterface`. Comparing this value to nil will result in false unless it is typecast.
 
@@ -117,23 +117,20 @@ existing := ctx.CallData
 > Note: As you have removed the definition of err you will need to change err = to err := in the Create and Update functions
 
 ## Handling unknown function requests
-By default if a function is passed during an instantiate, invoke or query request that is unknown to the chaincode, for example when a user misspells a known function or enters a non-existant one, the chaincode returns an error response to the peer to let the user know of the issue. It is possible however to specify a custom handler for these unknown function requests for your contract. Like the before transaction functions the unknown transaction function may take only the transaction context, although it does not need to take this and you may opt to take no parameters. Again like the before and after transaction functions the unknown transaction function does not have to be public or a function of the contract, but it can be. Unknown transaction functions do NOT have to return an error, if they do then the after transaction function will not be called. The before transaction will be called before an unknown transaction if it exists for the contract.
+By default if a function is passed during an instantiate, invoke or query request that is unknown to the chaincode, for example when a user misspells a known function or enters a non-existent one, the chaincode returns an error response to the peer to let the user know of the issue. It is possible however to specify a custom handler for these unknown function requests for your contract. Like the before transaction functions the unknown transaction function may take only the transaction context, although it does not need to take this and you may opt to take no parameters. Again like the before and after transaction functions the unknown transaction function does not have to be public or a function of the contract, but it can be. Unknown transaction functions do NOT have to return an error, if they do then the after transaction function will not be called. The before transaction will be called before an unknown transaction if it exists for the contract.
 
-The function for this tutorial will handle logging the details of the call using the shim logger and return an error. The function will not be reading or writing anything to the world state but will still take the transaction context as it will rely on the stub for accessing the call details. You should define this function in your utils.go file.
+The function will not be reading or writing anything to the world state but will still take the transaction context as it will rely on the stub for accessing the call details, and will return an error. You should define this function in your utils.go file.
 
 ```
-var logger = shim.NewLogger("go-developer-api-tutorial")
-
-// UnknownTransactionHandler logs details of a bad transaction request
-// and returns a shim error
+// UnknownTransactionHandler returns a shim error
+// with details of a bad transaction request
 func UnknownTransactionHandler(ctx *CustomTransactionContext) error {
 	fcn, args := ctx.GetStub().GetFunctionAndParameters()
-	logger.Errorf("Invalid function %s passed with args %v", fcn, args)
-	return fmt.Errorf("Invalid function %s", fcn)
+	return fmt.Errorf("Invalid function %s passed with args %v", fcn, args)
 }
 ```
 
-Also include `fmt` and `github.com/hyperledger/fabric/core/chaincode/shim` in your imports.
+Also include `fmt` and `github.com/hyperledger/fabric-chaincode-go/shim` in your imports.
 
 Like with the other extended settings you must inform the contract API of your intent to use a custom unknown transaction handler. The contract API finds which function to call by using the `contractapi.ContractInterface.GetUnknownTransaction()` function. As the Simple contract embeds the `contractapi.Contract` struct you can set the value returned by this function using `SetUnknownTransaction()` and passing in a reference to your function. Add the call to this function in your main.go file above the creation of the new chaincode.
 

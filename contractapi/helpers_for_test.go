@@ -368,18 +368,10 @@ func (sc *badContract) ReturnsBadSlice() []complex64 {
 	return []complex64{1}
 }
 
-func (sc *badContract) ReturnsWrongOrder() (error, string) {
-	return nil, ""
-}
-
 func (sc *badContract) ReturnsBadTypeAndError() (complex64, error) {
 	return 1, nil
 }
 
 func (sc *badContract) ReturnsStringAndInt() (string, int) {
 	return "", 1
-}
-
-func (sc *badContract) ReturnsStringErrorAndInt() (string, error, int) {
-	return "", nil, 1
 }

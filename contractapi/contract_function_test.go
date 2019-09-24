@@ -294,21 +294,6 @@ func testMethod2ContractFunctionReturns(t *testing.T, funcFromStruct bool) {
 	assert.Equal(t, contractFunctionReturns{}, returns, "should return a blank contractFunctionReturns")
 	assert.EqualError(t, err, fmt.Sprintf("%s contains invalid single return type. %s", methodName, typeIsValid(badType, []reflect.Type{errorType})), "should return expected error for using a bad type")
 
-	// Should return error when returning two types and they are in the wrong order
-	if funcFromStruct {
-		methodName = "ReturnsWrongOrder"
-		method, _ = generateMethodTypesAndValuesFromName(bc, methodName)
-	} else {
-		method = generateMethodTypesAndValuesFromFunc(bc.ReturnsWrongOrder)
-		methodName = genericMethodName
-	}
-
-	returns, err = method2ContractFunctionReturns(method)
-
-	assert.Equal(t, contractFunctionReturns{}, returns, "should return a blank contractFunctionParams")
-
-	assert.EqualError(t, err, fmt.Sprintf("%s contains invalid first return type. Type error is not valid. Expected a struct or one of the basic types %s or an array/slice of these", methodName, listBasicTypes()), "should return expected error for bad first return type")
-
 	// Should return error when returning two types and first return type is bad
 	if funcFromStruct {
 		methodName = "ReturnsBadTypeAndError"
@@ -336,20 +321,6 @@ func testMethod2ContractFunctionReturns(t *testing.T, funcFromStruct bool) {
 
 	assert.Equal(t, contractFunctionReturns{}, returns, "should return a blank contractFunctionParams")
 	assert.EqualError(t, err, fmt.Sprintf("%s contains invalid second return type. Type int is not valid. Expected error", methodName))
-
-	// Should return error when returning more than two types
-	if funcFromStruct {
-		methodName = "ReturnsStringErrorAndInt"
-		method, _ = generateMethodTypesAndValuesFromName(bc, methodName)
-	} else {
-		method = generateMethodTypesAndValuesFromFunc(bc.ReturnsStringErrorAndInt)
-		methodName = genericMethodName
-	}
-
-	returns, err = method2ContractFunctionReturns(method)
-
-	assert.Equal(t, contractFunctionReturns{}, returns, "should return a blank contractFunctionParams")
-	assert.EqualError(t, err, fmt.Sprintf("Functions may only return a maximum of two values. %s returns 3", methodName))
 
 	// Should return contractFunctionReturns for no return types
 	if funcFromStruct {
@@ -1382,7 +1353,7 @@ func TestGetArgs(t *testing.T) {
 
 	txMetadata = TransactionMetadata{}
 	paramSchema = spec.Schema{}
-	paramSchema.AdditionalProperties = &spec.SchemaOrBool{false, nil}
+	paramSchema.AdditionalProperties = &spec.SchemaOrBool{Allows: false, Schema: nil}
 	paramsMetadata = ParameterMetadata{}
 	paramsMetadata.Schema = paramSchema
 	txMetadata.Parameters = make([]ParameterMetadata, 1)

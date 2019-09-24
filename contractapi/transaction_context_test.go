@@ -17,7 +17,7 @@ package contractapi
 import (
 	"testing"
 
-	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric-chaincode-go/shimtest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +26,7 @@ import (
 // ================================
 
 func TestSetStub(t *testing.T) {
-	stub := new(shim.MockStub)
+	stub := new(shimtest.MockStub)
 	stub.TxID = "some ID"
 
 	ctx := TransactionContext{}
@@ -37,7 +37,7 @@ func TestSetStub(t *testing.T) {
 }
 
 func TestGetStub(t *testing.T) {
-	stub := new(shim.MockStub)
+	stub := new(shimtest.MockStub)
 	stub.TxID = "some ID"
 
 	ctx := TransactionContext{}

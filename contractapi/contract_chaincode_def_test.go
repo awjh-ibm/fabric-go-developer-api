@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/go-openapi/spec"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/hyperledger/fabric/protos/peer"
+	"github.com/hyperledger/fabric-chaincode-go/shim"
+	"github.com/hyperledger/fabric-chaincode-go/shimtest"
+	"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,7 +55,7 @@ func callContractFunctionAndCheckResponse(t *testing.T, cc ContractChaincode, ar
 		args = append(args, arg)
 	}
 
-	mockStub := shim.NewMockStub("smartContractTest", &cc)
+	mockStub := shimtest.NewMockStub("smartContractTest", &cc)
 
 	var response peer.Response
 
@@ -583,7 +584,7 @@ func TestSetDefault(t *testing.T) {
 func TestInit(t *testing.T) {
 	// Should just return when no function name passed
 	cc := convertC2CC()
-	mockStub := shim.NewMockStub("blank fcn", &cc)
+	mockStub := shimtest.NewMockStub("blank fcn", &cc)
 	assert.Equal(t, shim.Success([]byte("Default initiator successful.")), cc.Init(mockStub), "should just return success on init with no function passed")
 
 	// Should call via invoke
